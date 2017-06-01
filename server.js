@@ -1,6 +1,8 @@
 var express = require('express');
 var mongo = require('mongodb').MongoClient;
-var process = require('process')
+var mongodb = require('mongodb');
+var process = require('process');
+var validUrl = require('valid-url');
 
 var app = express();
 
@@ -20,7 +22,9 @@ app.get('/:shorturl', function (req, res) {
       console.log('Connection established to', url);
       
       var collection = db.collection('urls');
-      var data = {'_id': shorturl};
+      
+      var id = new mongodb.ObjectID(shorturl);
+      var data = {'_id': id};
       
       collection.find(data, {'_id':0, 'long':1}).toArray(function(e, documents){
         if (e) throw e;
@@ -37,9 +41,15 @@ app.get('/:shorturl', function (req, res) {
   });
 });
 
-app.get('/new/:longurl', function (req, res) {
+app.get('/new/:longurl*', function (req, res) {
     var longurl = req.params.longurl;
     console.log(longurl);
+    
+    // if (!validUrl.isUri(longurl)) {
+    //   res.send("Error: Invalid URL");
+    //   return;
+    // }
+    
     // console.log(ValidURL(longurl));
     
     mongo.connect(url, function (err, db) {
